@@ -1,0 +1,14 @@
+/* messageOptionsMenuStyle.css */
+
+.message-menu-scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.message-menu-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 4px;
+}
+
+.message-menu-scroll-container::-webkit-scrollbar-track {
+    background-color: transparent;
+}

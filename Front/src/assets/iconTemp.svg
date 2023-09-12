@@ -1,0 +1,14 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="streamline:interface-time-stop-watch-timer-countdown-clock" clip-path="url(#clip0_90_5059)">
+<g id="Group">
+<path id="Vector" d="M17.3569 8.89701C17.3444 10.3256 17.0197 11.7343 16.4054 13.0242M8.99972 17.2542C7.90225 17.2542 6.81552 17.038 5.80158 16.618C4.78765 16.198 3.86636 15.5824 3.09033 14.8064C1.52306 13.2391 0.642578 11.1135 0.642578 8.89701M11.5712 11.4684L8.99972 8.25415H5.14258" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M15.4286 16.6113C16.4937 16.6113 17.3571 15.7478 17.3571 14.6827C17.3571 13.6176 16.4937 12.7542 15.4286 12.7542C14.3635 12.7542 13.5 13.6176 13.5 14.6827C13.5 15.7478 14.3635 16.6113 15.4286 16.6113Z" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M1.18262 5.81132C1.46282 5.11106 1.8393 4.4533 2.30119 3.85703M4.78262 1.64561C5.50719 1.22721 6.29222 0.923613 7.10976 0.745605M16.8169 5.81132C16.5367 5.11106 16.1602 4.4533 15.6983 3.85703M13.2169 1.64561C12.4923 1.22721 11.7073 0.923613 10.8898 0.745605" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_90_5059">
+<rect width="18" height="18" fill="white"/>
+</clipPath>
+</defs>
+</svg>
