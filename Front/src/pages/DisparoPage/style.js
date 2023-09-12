@@ -70,7 +70,7 @@ export const OptionDiv = styled.div`
 `;
 
 export const OptionIcon = styled.img`
-    // Se você precisar de estilos específicos para o ícone, adicione-os aqui
+    // Se você precisar de estilos específicos para o ícone
 `;
 
 
@@ -83,7 +83,6 @@ export const MiddleColumn = styled.div`
     padding: 15px;
     box-sizing: border-box;
     margin-left: 20px;
-    overflow-y: auto;
     box-sizing: border-box;
 `;
 
@@ -105,8 +104,6 @@ export const AddAllContainer = styled.div`
     padding: 10px;
     height: 30px;
     width: 50%;
-
-
 `;
 
 export const CheckBoxIcon = styled.div`
@@ -150,32 +147,6 @@ export const SearchInput = styled.input`
     outline: none;
     background-color: transparent;
 `;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export const RightColumn = styled.div`
     width: 450px;
@@ -254,13 +225,97 @@ export const ShootButton = styled.button`
 `;
 
 
+// Importar CSV
+
+export const InfoDiv = styled.div`
+    display: flex;
+    width: 90%;
+    padding: 15px 15px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    background:  #FEF3C7;
+    margin-left: 20px;
+    margin-top: 30px;
+`;
+
+export const InfoTextCSV = styled.p`
+    color: #451A03;
+    font-size: 16px;
+`;
+
+export const ImportButton = styled.button`
+    width: 90%; 
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 2px solid  #EAB308;
+    background: transparent;
+    color:  #EAB308;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    margin-left: 20px;
+    margin-top: 30px;
+
+    &:hover {
+        background-color: #EAB308;
+        color: white;
+    }
+`;
 
 
+// Container dos contatos 
 
+export const ContactsContainer = styled.div`
+    height: 85%;
+    margin-top: 30px;
+    padding: 10px;
+    overflow-y: auto;
+    border: 1px solid red;
 
+    &::-webkit-scrollbar {
+        width: 8px; 
+    }
 
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
 
+    &::-webkit-scrollbar-thumb {
+        background: rgb(000, 000, 000, 0.2);
+        border-radius: 10px;
+    }
+`;
 
+export const ContactDiv = styled.div`
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f1f1;
+    gap: 15px;
+`;
 
+export const ContactCheckbox = styled.div`
+    width: 20px;
+    height: 20px;
+    border: 2px solid #737373;
+    margin-right: 10px;
+    cursor: pointer;
+`;
 
+export const ContactImage = styled.img`
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 1px solid red;
+`;
 
+export const ContactName = styled.span`
+    color: #030712;
+    font-size: 16px;
+    font-weight: 400;
+`;
