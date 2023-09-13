@@ -1,17 +1,25 @@
 import React, { useEffect } from "react";
-import { ContactInfo, Layout, SearchComponent, UserData, WarningDiv, ProfileDiv, ArchiveDiv, ArchiveIcon } from "./style";
+import {
+  ContactInfo,
+  Layout,
+  SearchComponent,
+  UserData,
+  WarningDiv,
+  ProfileDiv,
+  ArchiveDiv,
+  ArchiveIcon,
+} from "./style";
 import { Search } from "react-feather";
 import PropTypes from "prop-types";
 import { listenerMessages } from "../../../services/socket-listener";
 import logo from "../../../assets/LOGO BONECO 1.png";
 import iconHeader from "../../../assets/icon-header.svg";
-import ContactsModal from '../../Modal/ModalContacts/index';
-import useContacts from '../../Modal/ModalContacts/useContacts';
-
+import ContactsModal from "../../Modal/ModalContacts/index";
+import useContacts from "../../Modal/ModalContacts/useContacts";
 
 const DEFAULT_IMAGE_URL = "/user.png";
 
-const ConversasComponent = ({ chats, setChats, onSearch, onClickContact }) => {
+const ConversasComponent = ({ chats, setChats, onSearch, onClickContact, choosedContact}) => {
   useEffect(() => {
     listenerMessages((err, data) => {
       if (err) return;
@@ -39,13 +47,15 @@ const ConversasComponent = ({ chats, setChats, onSearch, onClickContact }) => {
   };
 
   // Atualizar useEffect para reagir às mudanças em showArchived e chats
+  
   useEffect(() => {
-    if (showArchived) {
-      setVisibleChats(chats.filter((chat) => chat.archive));
-    } else {
-      setVisibleChats(chats.filter((chat) => !chat.archive));
-    }
-  }, [chats, showArchived]);
+   if (showArchived) {
+       setVisibleChats(chats.filter((chat) => chat.archive));
+   } else {
+       setVisibleChats(chats.filter((chat) => !chat.archive && chat.id !== choosedContact.id));
+   }
+}, [chats, showArchived, choosedContact]);
+
 
   // 1. Estado para controlar os chats visíveis
   const [visibleChats, setVisibleChats] = React.useState(
@@ -75,18 +85,19 @@ const ConversasComponent = ({ chats, setChats, onSearch, onClickContact }) => {
 
   const contacts = useContacts();
 
-
   return (
-      <Layout>
-         <ProfileDiv>
-            <img src={logo} alt="Foto de perfil" />
+    <Layout>
+      <ProfileDiv>
+        <img src={logo} alt="Foto de perfil" />
 
-            <div id="icon" onClick={() => setModalOpen(true)} style={{cursor: 'pointer'}}>
-              <img src={iconHeader} alt="Foto de perfil" />
-            </div>
-
-
-         </ProfileDiv>
+        <div
+          id="icon"
+          onClick={() => setModalOpen(true)}
+          style={{ cursor: "pointer" }}
+        >
+          <img src={iconHeader} alt="Foto de perfil" />
+        </div>
+      </ProfileDiv>
 
       <WarningDiv>
         <p>
@@ -153,7 +164,6 @@ const ConversasComponent = ({ chats, setChats, onSearch, onClickContact }) => {
                           {!contact.msgs
                             ? "Não foi possível carregar as mensagens anteriores..."
                             : contact.msgs.length > 0
-                            
                             ? contact.msgs[contact.msgs.length - 1].type ===
                                 "image" ||
                               contact.msgs[contact.msgs.length - 1].type ===
@@ -165,19 +175,15 @@ const ConversasComponent = ({ chats, setChats, onSearch, onClickContact }) => {
                               contact.msgs[contact.msgs.length - 1].type ===
                                 "sticker"
                               ? "Mensagem de mídia"
-
                               : contact.msgs[contact.msgs.length - 1].type ===
                                 "revoked"
                               ? "Mensagem Excluída"
-
                               : contact.msgs[contact.msgs.length - 1].type ===
                                 "gp2"
                               ? "Não há mensagens"
-
                               : contact.msgs[contact.msgs.length - 1].type ===
                                 "notification_template"
                               ? "Não há mensagens"
-                              
                               : contact.msgs[contact.msgs.length - 1].body
                             : "Não foi possível carregar as mensagens anteriores..."}
 
@@ -194,8 +200,12 @@ const ConversasComponent = ({ chats, setChats, onSearch, onClickContact }) => {
           : null}
       </ul>
 
-      {isModalOpen && <ContactsModal contacts={contacts} onClose={() => setModalOpen(false)} />}
-
+      {isModalOpen && (
+        <ContactsModal
+          contacts={contacts}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </Layout>
   );
 };

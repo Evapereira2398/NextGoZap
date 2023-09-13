@@ -1,15 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-
 import api from "../../services/api";
 import { getSession, getToken } from "../../services/auth";
 import { listenerMessages } from "../../services/socket-listener";
 import config from "../../util/sessionHeader";
-
 import MicRecorder from "mic-recorder-to-mp3";
 import NotificationSound from "../../assets/notification.mp3";
-
 import { MyTooltip } from "../../components/MyTooltip";
-
 import "emoji-mart/css/emoji-mart.css";
 import { toast } from "react-toastify";
 import { Picker } from "emoji-mart";
@@ -58,7 +54,6 @@ StyledMoreVertical
 
 const defaultImage = "user.png";
 
-
 const SendMessagePage = () => {
     const dropRef = useRef(null);
     const [allMessages, setAllMessages] = useState([]);
@@ -81,6 +76,11 @@ const SendMessagePage = () => {
     const [hasMessages, setHasMessages] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [selectedChatImage, setSelectedChatImage] = React.useState(defaultImage);
+    const [loading, setLoading] = useState(true);
+    const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
+    const [hasNoMore, setHasNoMore] = useState(false);
+    const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
 
     useEffect(() => {
@@ -89,6 +89,8 @@ const SendMessagePage = () => {
         }
     }, [allMessages]);
 
+
+    // Verificar sessão
     useEffect(() => {
         async function checkConnection() {
             try {
@@ -105,6 +107,8 @@ const SendMessagePage = () => {
         };
 
     }, []);
+
+
 
     useEffect(() => {
         if (stop === false) {
@@ -127,7 +131,7 @@ const SendMessagePage = () => {
 
 
     
-
+    // ------------------------------ Retorno das mensagens via Socket ---------------------------------- // 
     listenerMessages((err, data) => {
         if (err) return;
 
@@ -137,17 +141,24 @@ const SendMessagePage = () => {
         }*/
 
         (async function () {
-            const {data: {response}} = await api.get(`${getSession()}/all-chats-with-messages`, config());
+            const {data: {response: newChats}} = await api.get(`${getSession()}/all-chats-with-messages`, config());
+    
+            const updatedChats = newChats.map(newChat => {
+                const existingChat = chats.find(chat => chat.id === newChat.id);
+                if (existingChat) {
+                    return {
+                        ...newChat,
+                        imgUrl: existingChat.imgUrl,  
+                        name: existingChat.name      
+                    };
+                } 
+                
+                return newChat; 
+            });
+            
+            setChats(updatedChats);
+            setDados(updatedChats);
 
-            const arr = [];
-            for (const elem of response) {
-                if (!elem.archive) {
-                    arr.push(elem);
-                }
-            }
-
-            setChats(arr);
-            setDados(arr);
         })()
 
         if (chatRef.current !== null) {
@@ -159,12 +170,13 @@ const SendMessagePage = () => {
                 setAllMessages((prevState) => {
                     return [...prevState, data.response];
                 });
+
                 scrollToBottom();
             }
         }
     });
 
-    const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
+    // ------------------------------ Retorno dos contatos --------------------------------- //
 
     const handleCloseContactsModal = () => {
         setIsContactsModalOpen(false);
@@ -174,21 +186,18 @@ const SendMessagePage = () => {
         setIsContactsModalOpen(true);
     };
 
-    
-    const [isLoaded, setIsLoaded] = useState(false);
-
     /*useEffect(() => {
         if (isLoaded) {
             alert("Todos os contatos foram carregados!");
         }
     }, [isLoaded]);*/
     
-
     async function getAllContacts() {
         try {
+            const chatImages = await getChatImages();
             const { data } = await api.get(`${getSession()}/all-contacts`, config());
             const arr = [];
-            
+    
             for (const contact of data.response) {
                 if (contact.isMyContact && contact.id.user !== undefined) {
                     arr.push(contact);
@@ -203,14 +212,19 @@ const SendMessagePage = () => {
     
                 if (imageResponse.data.status === "success" && imageResponse.data.response.eurl) {
                     contact.imgUrl = imageResponse.data.response.eurl;
+
+                } else if (chatImages[contact.id._serialized]) {
+                    contact.imgUrl = chatImages[contact.id._serialized];
+
                 } else {
                     contact.imgUrl = './user.png';
                 }
     
                 if (statusResponse.data.status === "success" && statusResponse.data.response.status) {
                     contact.statusMessage = statusResponse.data.response.status;
+
                 } else {
-                    contact.statusMessage = ''; 
+                    contact.statusMessage = '';
                 }
             }
     
@@ -221,9 +235,12 @@ const SendMessagePage = () => {
         } catch (error) {
             console.error('Error:', error);
         }
+    
+        setLoading(false);
     }
+    
 
-
+    // ------------------------------------------------------- // 
     function zerarCronometro() {
         setSegundos(0);
         setMinutos(0);
@@ -254,7 +271,6 @@ const SendMessagePage = () => {
 
     function cancelRecording() {
         // mediaRecorder.stop();
-
         setRecordState(null);
         setStop(true);
         zerarCronometro();
@@ -297,6 +313,8 @@ const SendMessagePage = () => {
     }
 
 
+    //-------- ------------------------ Retorno dos chats ---------------------------------- //
+
     async function getAllChats() {
         try {
             const { data: { response: chatsResponse } } = await api.get(`${getSession()}/all-chats-with-messages`, config());
@@ -332,14 +350,26 @@ const SendMessagePage = () => {
     }
     
 
-    const scrollToBottom = () => {
-        if (messagesEnd.current !== null) {
-            messagesEnd.current.scrollIntoView({behavior: "smooth"});
+    // ------------------------ Rota para recuperar a imagem do chats ---------------------- //
+
+    async function getChatImages() {
+        try {
+            const { data } = await api.get(`${getSession()}/all-chats`, config());
+
+            return data.response.reduce((acc, chat) => {
+                acc[chat.id._serialized] = chat.contact.profilePicThumbObj?.img || './user.png';
+                return acc;
+            }, {});
+        } catch (error) {
+            console.error('Error in getChatImages:', error);
+            return {};
         }
-    };
+    }
+
+    // ------------------------------------ Selecionar Chat ---------------------------------- //
 
     const onClickContact = useCallback(async (contact) => {
-        setSelectedChatImage(contact.imgUrl || defaultImage);
+        setSelectedChatImage(contact.imgUrl);
         setChoosedContact(contact);
         setOpenLoading(true);
         setAllMessages([]);
@@ -352,6 +382,7 @@ const SendMessagePage = () => {
                 isGroup = true;
                 const {data} = await api.get(`${getSession()}/chat-by-id/${contact.id.replace(/[@g.us,@g.us]/g, "")}?isGroup=true`, config());
                 await api.post(`${getSession()}/send-seen`, {phone: contact.id.replace("@g.us", "")}, config());
+
             } else {
                 const {data} = await api.get(`${getSession()}/chat-by-id/${contact.id.replace(/[@c.us,@c.us]/g, "")}?isGroup=false`, config());
                 await api.post(`${getSession()}/send-seen`, {phone: contact.id.replace("@c.us", "")}, config());
@@ -369,20 +400,49 @@ const SendMessagePage = () => {
         scrollToBottom();
         contact.unreadCount = 0;
         setOpenLoading(false);
+
     }, []);
+
+    
+    // -------------------------------- funções adicionais  --------------------------------- // 
+
+    // Arquivar chats 
+    const archiveChat = async () => {
+        if (!choosedContact?.id) {
+            console.error("Nenhum chat selecionado para arquivar.");
+            return;
+        }
+    
+        try {
+            const chatId = choosedContact.id.replace(/[@g.us,@c.us]/g, "");
+            const session = getSession();
+            const response = await api.post( `${session}/archive-chat`, { phone: chatId }, config());
+            
+            if (response.data.status === "success") {
+                setChoosedContact({});  
+                await getAllChats();  
+        
+                setChoosedContact(null);
+    
+            } else {
+                console.error("Erro ao arquivar o chat:", response.data.message);
+            }
+
+        } catch (error) {
+            console.error("Erro ao fazer a chamada à API:", error);
+        }
+    };
     
 
-    function clearAndScrollToBottom() {
-        setMessage("");
-        setEmoji(false);
-        scrollToBottom();
-    }
+    // Função para rolar sempre para o final quando um chat for selecionado
+    const scrollToBottom = () => {
+        if (messagesEnd.current !== null) {
+            messagesEnd.current.scrollIntoView({behavior: "smooth"});
+        }
+    };
 
-    function addEmoji(e) {
-        let emoji = e.native;
-        setMessage(message + emoji);
-    }
 
+    // Enviar Mensagem 
     async function sendMessage() {
         if (!!message.trim() && !!getSession()) {
             const by = "";
@@ -403,8 +463,10 @@ const SendMessagePage = () => {
             }
 
             await api.post(`${getSession()}/${endpoint}`, body, config());
+            
             clearAndScrollToBottom();
             setSelectedMessage(null);
+
         } else {
             toast.error("Digite uma mensagem!", {
                 position: "bottom-center",
@@ -416,8 +478,10 @@ const SendMessagePage = () => {
                 progress: undefined,
             });
         }
-    }
+    };
 
+
+    // Enviar arquivo (Imagem/Video/Texto)
     function onChangeAnexo(e) {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
@@ -427,54 +491,61 @@ const SendMessagePage = () => {
             reader.onload = async function (e) {
                 const base64 = e.target.result;
                 const options = {
-                base64: base64,
-                phone: choosedContact.id.replace(/[@c.us,@g.us]/g, ""),
-                message: "",
-                filename: filename,
-            };
+                    base64: base64,
+                    phone: choosedContact.id.replace(/[@c.us,@g.us]/g, ""),
+                    message: "",
+                    filename: filename,
+                };
+
                 if (choosedContact.id.includes("@g.us")) {
                     options.isGroup = true;
                 }
+
                 try {
                     await api.post(`${getSession()}/send-file-base64`, options, config());
+
                 } catch (error) {
                     console.log("Catch onChangeAnexo()", error);
                 }
             };
         }
-    }
+    };
 
+
+    // Pesquisar conversa 
     function searchChat(e) {
         const { value } = e.target;
 
         const filterContact = contacts.filter((filtro) => {
-        if (filtro.name && filtro.id._serialized) {
-            return (
-            filtro.name
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .toLowerCase()
-                .indexOf(value.toLowerCase()) > -1 ||
-            filtro.id._serialized.indexOf(value) > -1
-            );
-        } else {
-            return [];
-        }
-        });
+            if (filtro.name && filtro.id._serialized) {
+                return (
+                    filtro.name
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase()
+                    .indexOf(value.toLowerCase()) > -1 ||
+                    filtro.id._serialized.indexOf(value) > -1
+                );
+
+            } else {
+                return []
+            }
+        })
 
         const filterChat = chats.filter((filtro) => {
-        if (filtro.name && filtro.id) {
-            return (
-            filtro.name
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .toLowerCase()
-                .indexOf(value.toLowerCase()) > -1 || filtro.id.indexOf(value) > -1
-            );
-        } else {
-            return [];
-        }
-        });
+            if (filtro.name && filtro.id) {
+                return (
+                    filtro.name
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase()
+                    .indexOf(value.toLowerCase()) > -1 || filtro.id.indexOf(value) > -1
+                );
+
+            } else {
+                return [];
+            }
+        })
 
         const searchArr = [];
 
@@ -483,7 +554,7 @@ const SendMessagePage = () => {
                 name: chat.name,
                 id: chat.id,
                 unreadCount: 0,
-            });
+            })
         }
 
         for (const contact of filterContact) {
@@ -501,17 +572,16 @@ const SendMessagePage = () => {
         if (value === "") {
             setChats(dados);
         }
-    }
-
-    const removeDuplicates = (arr) => {
-        return arr.filter((item, index, self) => {
-            if (item.name) return ( index === self.findIndex((t) => t.id === item.id && t.name && item.name));
-        });
     };
 
-    const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
-    const [hasNoMore, setHasNoMore] = useState(false);
 
+    // Inserir Emoji 
+    function addEmoji(e) {
+        let emoji = e.native;
+        setMessage(message + emoji);
+    }
+
+    // Carregar mais mensagens 
     async function loadMore() {
         setLoadingMoreMessages(true);
         try {
@@ -536,8 +606,21 @@ const SendMessagePage = () => {
         }
     };
 
+    function clearAndScrollToBottom() {
+        setMessage("");
+        setEmoji(false);
+        scrollToBottom();
+    }
 
-    // Estados e funções para o menu de 'pesquisa na conversa'
+    const removeDuplicates = (arr) => {
+        return arr.filter((item, index, self) => {
+            if (item.name) return ( index === self.findIndex((t) => t.id === item.id && t.name && item.name));
+        });
+    };
+
+    // ----------------------------------- SubMenus ------------------------------------ // 
+
+    // Pesquisa na conversa
     const [isSearchOpen, setSearchOpen] = useState(false);
 
     const openSearchModal = () => {
@@ -549,8 +632,7 @@ const SendMessagePage = () => {
     };
   
 
-
-    // Estados e funções para o menu de 'mais opções'
+    // Mais opções
     const [isMoreMenuOpen, setMoreMenuOpen] = useState(false);
 
     const toggleMoreMenu = () => {
@@ -562,8 +644,7 @@ const SendMessagePage = () => {
     };
 
 
-
-    // Estados e funções para o menu de 'mesagens definidas'
+    // Mesagens definidas
     const [isMessageMenuOpen, setMessageMenuOpen] = useState(false);
     const iconRef = useRef(null);
 
@@ -576,7 +657,7 @@ const SendMessagePage = () => {
     };  
 
     
-    // Estados e funções para o menu de'Notas'
+    // Notas
     const [isNoteMenuOpen, setNoteMenuOpen] = useState(false);
     const iconAddRef = useRef(null);
 
@@ -588,6 +669,8 @@ const SendMessagePage = () => {
         setNoteMenuOpen(false);
     };
 
+
+    // ------------------------------------- Render -------------------------------------- //
     return (
         <Layout>
             <HeaderComponent/>
@@ -600,6 +683,7 @@ const SendMessagePage = () => {
                             setChats={setChats}
                             onClickContact={onClickContact}
                             onSearch={searchChat}
+                            choosedContact={choosedContact}
                         />
 
                         <BackdropComponent open={openLoading}/>
@@ -633,7 +717,7 @@ const SendMessagePage = () => {
 
                                         <ButtonEtiquetaMenu />
 
-                                        <ModalFinalizarAtendimento />
+                                        <ModalFinalizarAtendimento onArchiveChat={archiveChat} />
 
                                         <ModalNextGoPay /> 
 

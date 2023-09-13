@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import IconFinalizar from '../../../assets/IconFinalizar.svg';
 import { X } from "react-feather";
 
-const FinalizarAtendimentoModal = ({ onFinalizar }) => {
+const FinalizarAtendimentoModal = ({ onFinalizar, onArchiveChat }) => {
     const [isFinalizarModalOpen, setFinalizarModalOpen] = useState(false);
 
     const openFinalizarModal = () => {
@@ -43,9 +43,11 @@ const FinalizarAtendimentoModal = ({ onFinalizar }) => {
                                 A conversa será movida para aba 
                                 de conversas arquivadas
                             </p>
-                            <button style={finalizarContentStyles.button} onClick={closeFinalizarModal}>
+                            <button style={finalizarContentStyles.button} onClick={onArchiveChat}>
                                 FINALIZAR ATENDIMENTO
                             </button>
+
+
                         </div>
                     </div>
                 </div>
