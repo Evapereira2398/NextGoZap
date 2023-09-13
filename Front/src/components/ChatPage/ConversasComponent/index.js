@@ -19,7 +19,7 @@ import useContacts from "../../Modal/ModalContacts/useContacts";
 
 const DEFAULT_IMAGE_URL = "/user.png";
 
-const ConversasComponent = ({ chats, setChats, onSearch, onClickContact, choosedContact}) => {
+const ConversasComponent = ({ chats, setChats, onSearch, onClickContact}) => {
   useEffect(() => {
     listenerMessages((err, data) => {
       if (err) return;
@@ -47,15 +47,13 @@ const ConversasComponent = ({ chats, setChats, onSearch, onClickContact, choosed
   };
 
   // Atualizar useEffect para reagir às mudanças em showArchived e chats
-  
   useEffect(() => {
-   if (showArchived) {
-       setVisibleChats(chats.filter((chat) => chat.archive));
-   } else {
-       setVisibleChats(chats.filter((chat) => !chat.archive && chat.id !== choosedContact.id));
-   }
-}, [chats, showArchived, choosedContact]);
-
+    if (showArchived) {
+      setVisibleChats(chats.filter((chat) => chat.archive));
+    } else {
+      setVisibleChats(chats.filter((chat) => !chat.archive));
+    }
+  }, [chats, showArchived]);
 
   // 1. Estado para controlar os chats visíveis
   const [visibleChats, setVisibleChats] = React.useState(

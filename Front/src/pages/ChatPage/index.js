@@ -34,6 +34,7 @@ import NoteOptionsMenu from '../../components/SubMenus/MenuNotas';
 import ScheduleMessageMenu from '../../components/SubMenus/MenuAgendarMensagem';
 import ContactsModal from '../../components/Modal/ModalContacts/index';
 import HeaderComponent from '../../components/Header';
+import Swal from 'sweetalert2';
 import { width } from "@mui/system";
 
 
@@ -59,7 +60,7 @@ const SendMessagePage = () => {
     const [allMessages, setAllMessages] = useState([]);
     const [chats, setChats] = useState([]);
     const [dados, setDados] = useState([]);
-    const [choosedContact, setChoosedContact] = useState([]);
+    const [choosedContact, setChoosedContact] = useState(null);
     const [imgContact, setImgContact] = useState("");
     const [message, setMessage] = useState("");
     const chatRef = useRef(null);
@@ -81,6 +82,22 @@ const SendMessagePage = () => {
     const [hasNoMore, setHasNoMore] = useState(false);
     const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+
+
+
+
+    // Definição do Alert para verificações adicionais
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
 
 
     useEffect(() => {
@@ -414,7 +431,7 @@ const SendMessagePage = () => {
         }
     
         try {
-            const chatId = choosedContact.id.replace(/[@g.us,@c.us]/g, "");
+            const chatId = choosedContact?.id?.replace(/[@g.us,@c.us]/g, "");
             const session = getSession();
             const response = await api.post( `${session}/archive-chat`, { phone: chatId }, config());
             
@@ -423,6 +440,11 @@ const SendMessagePage = () => {
                 await getAllChats();  
         
                 setChoosedContact(null);
+
+                Toast.fire({
+                    icon: 'success',
+                    title: "Seu atendimento foi finalizado! E a conversa foi arquivada"
+                  });
     
             } else {
                 console.error("Erro ao arquivar o chat:", response.data.message);
@@ -688,187 +710,175 @@ const SendMessagePage = () => {
 
                         <BackdropComponent open={openLoading}/>
 
-                        <ChatContainer>
-                            {choosedContact.length <= 0 ? null : (
-                            
-                            <HeaderContact>
-                                <div className={"container-info-ctt"}>
-                                
-                                    <img
-                                        src={selectedChatImage}
-                                        alt={choosedContact.name}
-                                        loading={"lazy"}
-                                        onError={(e) => (e.target.src = defaultImage )}   
-                                    />
-
-                                    <h3>
-                                        {choosedContact.name === undefined
-                                        ? choosedContact.id
-                                            .replace(/[@c.us,@g.us]/g, "")
-                                        : choosedContact.name}
-
-                                        <p>Visto por ultimo hoje as 14:45</p>
-                                    </h3>
-                                
-                                
-                                    <HeaderButton>
-
-                                        <ButtonListaMenu iconLista={IconLista} />
-
-                                        <ButtonEtiquetaMenu />
-
-                                        <ModalFinalizarAtendimento onArchiveChat={archiveChat} />
-
-                                        <ModalNextGoPay /> 
-
-                                    </HeaderButton>
-                                
-                                    <StyledSearch onClick={openSearchModal} />
-                                    <SearchModal isSearchOpen={isSearchOpen} closeSearchModal={closeSearchModal} />
-
-                                    <StyledMoreVertical onClick={toggleMoreMenu} />
-                                    <MoreOptionsMenu isOpen={isMoreMenuOpen} onClose={closeMoreMenu} />
-                                
-                                </div>
-                            </HeaderContact>
-
-                            )}
-
-                            <ul ref={chatRef} style={{ overflowX: "hidden" }}>
-                            {!hasNoMore && hasMessages && allMessages.length > 0 && (
-                                <LoadMoreComponent onClick={loadMore}>
-                                    Carregar mais{loadingMoreMessages && <>&nbsp;&nbsp;&nbsp;<CircularProgress size={10}/></>}
-                                </LoadMoreComponent>
-                            )}
-
-                            {!allMessages.length ? (
+                    <ChatContainer>
+                            {!choosedContact ? (
                                 <WaitingContainer>
-                                <div>
-                                    <img src={ImageLoader} alt={"Smartphone"} />
-                                </div>
+                                    <div>
+                                        <img src={ImageLoader} alt={"Smartphone"} />
+                                    </div>
                                 </WaitingContainer>
                             ) : (
-                                <div>
-                                {allMessages.map((message) => {
-                                    return (
-                                    <li key={message.id} id={message.id}>
-                                        <ChatComponent
-                                        isMe={message.fromMe ? "right" : "left"}
-                                        isWarning={
-                                            !message?.body &&
-                                            message.type !== "chat" &&
-                                            !["ptt", "audio"].includes(message.type)
-                                        }
-                                        session={getSession()}
-                                        token={getToken()}
-                                        message={message}
-                                        selectMessageId={() => setSelectedMessage(message)}
-                                        />
-                                    </li>
-                                    );
-                                })}
-                                </div>
-                            )}
+                                <>
+                                    <HeaderContact>
+                                    <div className={"container-info-ctt"}>
+                                                    
+                                                    <img
+                                                        src={selectedChatImage}
+                                                        alt={choosedContact.name}
+                                                        loading={"lazy"}
+                                                        onError={(e) => (e.target.src = defaultImage )}   
+                                                    />
 
-                            <div ref={messagesEnd}/>
-                            </ul>
+                                                    <h3>
+                                                        {!choosedContact.name === undefined
+                                                        ? choosedContact.id
+                                                            .replace(/[@c.us,@g.us]/g, "")
+                                                        : choosedContact.name}
 
-                            {!!selectedMessage && (
-                            
-                            <ReplyContainer>
+                                                        <p>Visto por ultimo hoje as 14:45</p>
+                                                    </h3>
+                                                
+                                                
+                                                    <HeaderButton>
 
-                                <div className="content">
-                                    <ChatComponent
-                                        isMe={selectedMessage.fromMe ? "right" : "left"}
-                                        isWarning={!selectedMessage?.body && selectedMessage.type !== "chat" && !["ptt", "audio"].includes(selectedMessage.type)}
-                                        session={getSession()}
-                                        token={getToken()}
-                                        message={selectedMessage}
-                                        selectMessageId={() => {}}
-                                    />
-                                </div>
+                                                        <ButtonListaMenu iconLista={IconLista} />
 
-                                <div>
-                                    <MyTooltip
-                                        name="Cancelar"
-                                        icon={<CancelIcon />}
-                                        onClick={() => setSelectedMessage(null)}
-                                    />
-                                </div>
+                                                        <ButtonEtiquetaMenu />
 
-                            </ReplyContainer>
-                            )}
+                                                        <ModalFinalizarAtendimento onArchiveChat={archiveChat} />
 
-                            {emoji ? <Picker onSelect={addEmoji} /> : null}
-                            {choosedContact.length <= 0 ? null : (
-        
-                            <div className="footer_container">
-                                
-                                <div className="bottom-container">     
-    
-                                    {/* Ícones à esquerda */}
-                                    <div className="left-icons">
-                                    {emoji ? (
-                                        <button onClick={() => setEmoji(false)}>
-                                            <X/>
-                                        </button>
-                                        ) : (
-                                            <button onClick={() => setEmoji(true)}>
-                                                <img src={IconEmoji} alt={"IconEmoji"} style={{ width: '18px', height: '18px' }}/>
-                                            </button>
+                                                        <ModalNextGoPay /> 
+
+                                                    </HeaderButton>
+                                                
+                                                    <StyledSearch onClick={openSearchModal} />
+                                                    <SearchModal isSearchOpen={isSearchOpen} closeSearchModal={closeSearchModal} />
+
+                                                    <StyledMoreVertical onClick={toggleMoreMenu} />
+                                                    <MoreOptionsMenu isOpen={isMoreMenuOpen} onClose={closeMoreMenu} />
+                                                
+                                                </div>
+                                    </HeaderContact>
+
+                                    <ul ref={chatRef} style={{ overflowX: "hidden" }}>
+                                        {!hasNoMore && hasMessages && allMessages.length > 0 && (
+                                            <LoadMoreComponent onClick={loadMore}>
+                                                Carregar mais{loadingMoreMessages && <>&nbsp;&nbsp;&nbsp;<CircularProgress size={10}/></>}
+                                            </LoadMoreComponent>
                                         )}
 
-                                        <label className="icon-container">
-                                            <input type="file" onChange={onChangeAnexo} />
-                                            <img src={IconSendFile} alt={"IconMessage"}/>
-                                        </label>
+                                        {allMessages.map((message) => (
+                                            <li key={message.id} id={message.id}>
+                                                <ChatComponent
+                                                    isMe={message.fromMe ? "right" : "left"}
+                                                    isWarning={
+                                                        !message?.body &&
+                                                        message.type !== "chat" &&
+                                                        !["ptt", "audio"].includes(message.type)
+                                                    }
+                                                    session={getSession()}
+                                                    token={getToken()}
+                                                    message={message}
+                                                    selectMessageId={() => setSelectedMessage(message)}
+                                                />
+                                            </li>
+                                        ))}
 
-                                        <div className="icon-container" onClick={toggleMessageMenu} ref={iconRef}>
-                                            <img src={IconMessage} alt={"IconMessage"}/>
+                                        <div ref={messagesEnd}/>
+                                    </ul>
+
+                                    {!!selectedMessage && (
+                                        <ReplyContainer>
+                                            <div className="content">
+                                                        <ChatComponent
+                                                            isMe={selectedMessage.fromMe ? "right" : "left"}
+                                                            isWarning={!selectedMessage?.body && selectedMessage.type !== "chat" && !["ptt", "audio"].includes(selectedMessage.type)}
+                                                            session={getSession()}
+                                                            token={getToken()}
+                                                            message={selectedMessage}
+                                                            selectMessageId={() => {}}
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <MyTooltip
+                                                            name="Cancelar"
+                                                            icon={<CancelIcon />}
+                                                            onClick={() => setSelectedMessage(null)}
+                                                        />
+                                                    </div>
+                                        </ReplyContainer>
+                                    )}
+
+                                    {emoji ? <Picker onSelect={addEmoji} /> : null}
+
+                                    <div className="footer_container">
+                                        <div className="bottom-container">     
+                                            
+                                            {/* Ícones à esquerda */}
+                                            <div className="left-icons">
+                                            {emoji ? (
+                                                <button onClick={() => setEmoji(false)}>
+                                                    <X/>
+                                                </button>
+                                                ) : (
+                                                    <button onClick={() => setEmoji(true)}>
+                                                        <img src={IconEmoji} alt={"IconEmoji"} style={{ width: '18px', height: '18px' }}/>
+                                                    </button>
+                                                )}
+
+                                                <label className="icon-container">
+                                                    <input type="file" onChange={onChangeAnexo} />
+                                                    <img src={IconSendFile} alt={"IconMessage"}/>
+                                                </label>
+
+                                                <div className="icon-container" onClick={toggleMessageMenu} ref={iconRef}>
+                                                    <img src={IconMessage} alt={"IconMessage"}/>
+                                                </div>
+                                                <MessageOptionsMenu isOpen={isMessageMenuOpen} onClose={closeMessageMenu} anchorRef={iconRef} />
+
+                                                <div className="icon-container" onClick={toggleNoteMenu} ref={iconAddRef}>
+                                                    <img src={IconAdd} alt={"IconAdd"}/>
+                                                </div>
+                                                <NoteOptionsMenu isOpen={isNoteMenuOpen} onClose={closeNoteMenu} anchorRef={iconAddRef} />
+
+                                                <ScheduleMessageMenu />
+                                            </div>
+
+
+
+                                            {/* Input e microfone */}
+                                            <div className="message-input-container">
+                                            <textarea
+                                                placeholder="Digite sua mensagem aqui..."
+                                                onKeyDown={(event) => {
+                                                    if (event.key === "Enter" && !event.shiftKey) {
+                                                        event.preventDefault();
+                                                        sendMessage();
+                                                    }
+                                                }}
+                                                value={message}
+                                                onChange={(e) => setMessage(e.target.value)}
+                                            />
+
+                                                {message === "" && (
+                                                <div className="mic-icon">
+                                                    <img src={IconMic} alt={"Microphone Icon"} onClick={startRecording} style={{ width: '22px', height: '22px' }}/>
+                                                </div>
+                                                )}
+                                            </div>
+
+                                            {/* Botão de envio */}
+                                            <div className="send-button">
+                                                <img src={IconSendMessage} alt={"Send Message Icon"} onClick={sendMessage}/>
+                                            </div>
+
                                         </div>
-                                        <MessageOptionsMenu isOpen={isMessageMenuOpen} onClose={closeMessageMenu} anchorRef={iconRef} />
-
-                                        <div className="icon-container" onClick={toggleNoteMenu} ref={iconAddRef}>
-                                            <img src={IconAdd} alt={"IconAdd"}/>
-                                        </div>
-                                        <NoteOptionsMenu isOpen={isNoteMenuOpen} onClose={closeNoteMenu} anchorRef={iconAddRef} />
-
-                                        <ScheduleMessageMenu />
                                     </div>
-
-
-    
-                                    {/* Input e microfone */}
-                                    <div className="message-input-container">
-                                    <textarea
-                                        placeholder="Digite sua mensagem aqui..."
-                                        onKeyDown={(event) => {
-                                            if (event.key === "Enter" && !event.shiftKey) {
-                                                event.preventDefault();
-                                                sendMessage();
-                                            }
-                                        }}
-                                        value={message}
-                                        onChange={(e) => setMessage(e.target.value)}
-                                    />
-
-                                        {message === "" && (
-                                        <div className="mic-icon">
-                                            <img src={IconMic} alt={"Microphone Icon"} onClick={startRecording} style={{ width: '22px', height: '22px' }}/>
-                                        </div>
-                                        )}
-                                    </div>
-    
-                                    {/* Botão de envio */}
-                                    <div className="send-button">
-                                        <img src={IconSendMessage} alt={"Send Message Icon"} onClick={sendMessage}/>
-                                    </div>
-
-                                </div>
-                            </div>
-    
+                                </>
                             )}
                         </ChatContainer>
+
                     </ContentContainer>
                 </Container>
 

@@ -103,7 +103,6 @@ import IconFav from "../../assets/IconFav.svg";
 import IconClose from '../../assets/IconClose.svg'
 import HeaderComponent from '../../components/Header';
 import Swal from 'sweetalert2';
-import WaveSurfer from 'wavesurfer.js';
 
 
 
