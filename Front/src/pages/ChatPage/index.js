@@ -815,37 +815,35 @@ const SendMessagePage = () => {
                                     <div className="footer_container">
                                         <div className="bottom-container">     
                                             
-                                            {/* Ícones à esquerda */}
-                                            <div className="left-icons">
-                                            {emoji ? (
-                                                <button onClick={() => setEmoji(false)}>
-                                                    <X/>
-                                                </button>
-                                                ) : (
-                                                    <button onClick={() => setEmoji(true)}>
-                                                        <img src={IconEmoji} alt={"IconEmoji"} style={{ width: '18px', height: '18px' }}/>
-                                                    </button>
-                                                )}
+                                    {/* Ícones à esquerda */}
+                                    <div className="left-icons">
+                                    {emoji ? (
+                                        <button onClick={() => setEmoji(false)}>
+                                            <X/>
+                                        </button>
+                                        ) : (
+                                            <button onClick={() => setEmoji(true)}>
+                                                <img src={IconEmoji} alt={"IconEmoji"} style={{ width: '18px', height: '18px' }}/>
+                                            </button>
+                                        )}
 
-                                                <label className="icon-container">
-                                                    <input type="file" onChange={onChangeAnexo} />
-                                                    <img src={IconSendFile} alt={"IconMessage"}/>
-                                                </label>
+                                    <label className="icon-container">
+                                        <input type="file" onChange={onChangeAnexo} />
+                                        <img src={IconSendFile} alt={"IconMessage"}/>
+                                    </label>
 
-                                                <div className="icon-container" onClick={toggleMessageMenu} ref={iconRef}>
-                                                    <img src={IconMessage} alt={"IconMessage"}/>
-                                                </div>
-                                                <MessageOptionsMenu isOpen={isMessageMenuOpen} onClose={closeMessageMenu} anchorRef={iconRef} />
+                                    <div className="icon-container" onClick={toggleMessageMenu} ref={iconRef}>
+                                        <img src={IconMessage} alt={"IconMessage"}/>
+                                    </div>
+                                    <MessageOptionsMenu isOpen={isMessageMenuOpen} onClose={closeMessageMenu} anchorRef={iconRef} />
 
-                                                <div className="icon-container" onClick={toggleNoteMenu} ref={iconAddRef}>
-                                                    <img src={IconAdd} alt={"IconAdd"}/>
-                                                </div>
-                                                <NoteOptionsMenu isOpen={isNoteMenuOpen} onClose={closeNoteMenu} anchorRef={iconAddRef} />
+                                    <div className="icon-container" onClick={toggleNoteMenu} ref={iconAddRef}>
+                                        <img src={IconAdd} alt={"IconAdd"}/>
+                                    </div>
+                                    <NoteOptionsMenu isOpen={isNoteMenuOpen} onClose={closeNoteMenu} anchorRef={iconAddRef} />
 
-                                                <ScheduleMessageMenu />
-                                            </div>
-
-
+                                    <ScheduleMessageMenu />
+                                </div>
 
                                             {/* Input e microfone */}
                                             <div className="message-input-container">

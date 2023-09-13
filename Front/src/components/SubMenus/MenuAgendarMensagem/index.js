@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo} from 'react';
 import IconTemp from '../../../assets/iconTemp.svg';
 import IconDateAgendar from '../../../assets/IconDateAgendar.svg';
 import IconHoraAgendar from '../../../assets/IconHoraAgendar.svg';
@@ -8,10 +8,33 @@ const ScheduleMessageMenu = () => {
     // Estado e referências
     const [isScheduleMenuOpen, setScheduleMenuOpen] = useState(false);
     const [isMessageSelectMenuOpen, setMessageSelectMenuOpen] = useState(false);
+    const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedTime, setSelectedTime] = useState("");
+    const [selectedMessage, setSelectedMessage] = useState("Selecionar mensagem"); // Inicializando com "Selecionar mensagem"
 
     const scheduleMenuRef = useRef(null);
     const messageSelectMenuRef = useRef(null);
     const iconTempRef = useRef(null);
+
+
+    // Função para resetar os valores
+    const resetValues = useCallback(() => { // Usando useCallback
+        setSelectedDate("");
+        setSelectedTime("");
+        setSelectedMessage("Selecionar mensagem");
+    }, []); // Dependências vazias indicam que esta função nunca será recriada
+
+
+    const updateDate = (newDate) => {
+        setSelectedDate(newDate);
+    };
+    
+    const updateTime = (newTime) => {
+        setSelectedTime(newTime);
+    };
+
+
 
     // Funções de manipulação para o menu agendar mensagem
     const toggleScheduleMenu = () => {
@@ -22,17 +45,6 @@ const ScheduleMessageMenu = () => {
         setScheduleMenuOpen(false);
     };
 
-    const handleScheduleMenuClickOutside = event => {
-        if (
-            scheduleMenuRef.current && 
-            !scheduleMenuRef.current.contains(event.target) && 
-            iconTempRef.current && 
-            !iconTempRef.current.contains(event.target)
-        ) {
-            closeScheduleMenu();
-        }
-    };
-
     // Funções de manipulação para o menu de seleção de mensagem
     const toggleMessageSelectMenu = () => {
         setMessageSelectMenuOpen(prevState => !prevState);
@@ -41,45 +53,60 @@ const ScheduleMessageMenu = () => {
     const closeMessageSelectMenu = () => {
         setMessageSelectMenuOpen(false);
     };
-
-    const handleMessageSelectMenuClickOutside = event => {
-        if (
-            messageSelectMenuRef.current && 
-            !messageSelectMenuRef.current.contains(event.target) && 
-            iconTempRef.current && 
-            !iconTempRef.current.contains(event.target)
-        ) {
-            closeMessageSelectMenu();
+    
+    
+    // Função consolidada para detecção de cliques fora
+    const handleClickOutside = event => {
+        const clickedOutsideScheduleMenu = scheduleMenuRef.current && !scheduleMenuRef.current.contains(event.target);
+        const clickedOnIcon = iconTempRef.current && iconTempRef.current.contains(event.target);
+    
+        if (clickedOutsideScheduleMenu && !clickedOnIcon) {
+            closeScheduleMenu();
+            if (isMessageSelectMenuOpen) {
+                closeMessageSelectMenu();
+            }
         }
     };
+    
 
-    // Efeitos para ouvir cliques fora
+    // Efeito para ouvir cliques fora
     useEffect(() => {
-        if (isScheduleMenuOpen) {
-            document.addEventListener('mousedown', handleScheduleMenuClickOutside);
-        } else {
-            document.removeEventListener('mousedown', handleScheduleMenuClickOutside);
-        }
-
+        document.addEventListener('mousedown', handleClickOutside);
+        
         return () => {
-            document.removeEventListener('mousedown', handleScheduleMenuClickOutside);
+            document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isScheduleMenuOpen]);
+    }, []);
+
 
     useEffect(() => {
-        if (isMessageSelectMenuOpen) {
-            document.addEventListener('mousedown', handleMessageSelectMenuClickOutside);
-        } else {
-            document.removeEventListener('mousedown', handleMessageSelectMenuClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleMessageSelectMenuClickOutside);
-        };
-    }, [isMessageSelectMenuOpen]);
+        setIsOverlayVisible(isScheduleMenuOpen || isMessageSelectMenuOpen);
+    }, [isScheduleMenuOpen, isMessageSelectMenuOpen]);
+    
+    
 
     // Componentes internos do menu
-    const ScheduleDropdownMenu = ({ isOpen }) => {
+    const ScheduleDropdownMenu = memo(({ isOpen, 
+        selectedDate, 
+        setSelectedDate, 
+        selectedTime, 
+        setSelectedTime, 
+        setSelectedMessage, 
+         }) => {
+
+
+        console.log('Rendering ScheduleDropdownMenu');
+
+        const handleDateChange = useCallback((e) => {
+            const newDate = e.target.value;
+            updateDate(newDate); // Use the function directly
+        }, []);
+    
+        const handleTimeChange = useCallback((e) => {
+            const newTime = e.target.value;
+            updateTime(newTime); // Use the function directly
+        }, []);
+
         if (!isOpen) return null;
 
         return (
@@ -88,26 +115,26 @@ const ScheduleMessageMenu = () => {
 
             <div style={scheduleMenuStyles.inputContainer}>
                 <img src={IconDateAgendar} alt="Ícone de Data" style={scheduleMenuStyles.icon} />
-                <input style={scheduleMenuStyles.input} type="text" placeholder="18 de agosto de 2023" />
+                <input value={selectedDate} onChange={handleDateChange} style={scheduleMenuStyles.input} type="text" placeholder="18 de agosto de 2023" />
             </div>
 
             <div style={scheduleMenuStyles.inputContainer}>
                 <img src={IconHoraAgendar} alt="Ícone de Hora" style={scheduleMenuStyles.icon} />
-                <input style={scheduleMenuStyles.input} type="text" placeholder="11: 00" />
+                <input value={selectedTime} onChange={handleTimeChange} style={scheduleMenuStyles.input} type="text" placeholder="11: 00" />
             </div>
 
             <div style={scheduleMenuStyles.inputContainer} onClick={toggleMessageSelectMenu}>
-                <button style={scheduleMenuStyles.selectInput}>Selecionar mensagem</button>
+                <button style={scheduleMenuStyles.selectInput}>{selectedMessage}</button>
             </div>
             
-            {isMessageSelectMenuOpen && <MessageSelectDropdownMenu isOpen={isMessageSelectMenuOpen} />}
+            {isMessageSelectMenuOpen && <MessageSelectDropdownMenu isOpen={isMessageSelectMenuOpen} onSelect={setSelectedMessage} />} 
 
-            <button style={scheduleMenuStyles.button} onClick={closeScheduleMenu}>Programar</button>
+            <button style={scheduleMenuStyles.button} onClick={() => {closeScheduleMenu(); resetValues();}}>Programar</button>
         </div>
         );
-    };
+    });
 
-    const MessageSelectDropdownMenu = ({ isOpen }) => {
+    const MessageSelectDropdownMenu = memo(({ isOpen, onSelect }) => {
         if (!isOpen) return null;
         
         const menuOptions = [
@@ -127,25 +154,49 @@ const ScheduleMessageMenu = () => {
 
         return (
             <div style={messageSelectMenuStyles.menu} ref={messageSelectMenuRef}>
-            <h4 style={messageSelectMenuStyles.title}>Mensagens definidas</h4>
+                <h4 style={messageSelectMenuStyles.title}>Mensagens definidas</h4>
                 <div className="message-select-scroll-container" style={{...messageSelectMenuStyles.scrollContainer}}>
                     {menuOptions.map(option => (
-                    <div style={messageSelectMenuStyles.item} key={option} onClick={closeMessageSelectMenu}>
+                    <div style={messageSelectMenuStyles.item} key={option} onClick={() => {closeMessageSelectMenu(); onSelect(option);}}>
                         {option}
                     </div>
                     ))}
                 </div>
-        </div>
+            </div>
         );
-    };
+    });
 
     // Retornando o componente
     return (
         <div>
-            <div className="icon-container" ref={iconTempRef} onClick={toggleScheduleMenu}>
+            {isOverlayVisible && 
+                <div 
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        zIndex: 10,
+                        backgroundColor: 'transparent'
+                    }} 
+                    onClick={() => {
+                        closeScheduleMenu();
+                        closeMessageSelectMenu();
+                    }} 
+                />
+            }
+            <div className="icon-container" onClick={toggleScheduleMenu}>
                 <img src={IconTemp} alt={"IconTemp"} />
             </div>
-            <ScheduleDropdownMenu isOpen={isScheduleMenuOpen} />
+            <ScheduleDropdownMenu 
+                isOpen={isScheduleMenuOpen} 
+                selectedDate={selectedDate} 
+                setSelectedDate={setSelectedDate} 
+                selectedTime={selectedTime} 
+                setSelectedTime={setSelectedTime} 
+                setSelectedMessage={setSelectedMessage}
+            />
         </div>
     );
 }
@@ -166,6 +217,7 @@ const scheduleMenuStyles = {
         flexDirection: 'column',
         gap: '18px',
         left: '60px',
+        zIndex: '10',
     },
 
     title: {
@@ -239,6 +291,7 @@ const messageSelectMenuStyles = {
         boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
         height: '220px',
         overflowY: 'auto',
+        zIndex: '10',
     },
 
     title: {
