@@ -32,11 +32,6 @@ const ChatComponent = ({ message, session, isMe, isWarning, selectMessageId}) =>
    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
 
-
-
-   console.log("Message Data:", message);
-
-
    const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
    };
@@ -211,7 +206,6 @@ const ChatComponent = ({ message, session, isMe, isWarning, selectMessageId}) =>
                            }}
                         />
 
-                           
                         <div className={"download"} style={{ display: display }} onClick={() => onClickDownload("image")} />
 
                      </ImageContainer> 

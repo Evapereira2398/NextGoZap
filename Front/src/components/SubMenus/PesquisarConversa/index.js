@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const SearchModal = ({ isSearchOpen, closeSearchModal }) => {
+const SearchModal = ({ isSearchOpen, closeSearchModal, contactName }) => {
 
     if (!isSearchOpen) return null;
 
@@ -23,7 +23,9 @@ const SearchModal = ({ isSearchOpen, closeSearchModal }) => {
                     <h3 style={searchModalStyles.title}>Pesquisar mensagens</h3>
                 </div>
                 <input style={searchModalStyles.input} type="text" placeholder="Pesquisar na conversa..." />
-                <p style={searchModalStyles.description}>Pesquisar mensagens com Gustavo Gomes</p>
+                <p style={searchModalStyles.description}>
+                    Pesquisar mensagens com {contactName}
+                </p>
             </div>
         </div>
     );

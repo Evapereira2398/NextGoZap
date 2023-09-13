@@ -94,9 +94,6 @@ const ScheduleMessageMenu = () => {
         setSelectedMessage, 
          }) => {
 
-
-        console.log('Rendering ScheduleDropdownMenu');
-
         const handleDateChange = useCallback((e) => {
             const newDate = e.target.value;
             updateDate(newDate); // Use the function directly
