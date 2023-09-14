@@ -12,6 +12,7 @@ import ModalMenu from "../../components/Modal/ModalEsqueceuSenha";
 import ErrorModal from "../../components/Modal/ErrorModal";
 import BackdropComponent from "../../components/BackdropComponent";
 import LoginImage from "../../assets/logoNextGoZap.png";
+import Swal from 'sweetalert2';
 import { fontSize } from "@mui/system";
 
 const useStyles = makeStyles((theme) => ({
@@ -48,8 +49,89 @@ export default function LoginPage({ history }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState("");
   const [usernameValid, setUsernameValid] = useState(null);
+  const [name, setName] = useState("");
 
   const { state: haveLogin } = useLocation();
+
+
+  // ------------------------------ SweetAlert ----------------------------------- //
+
+   const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+         toast.addEventListener('mouseenter', Swal.stopTimer);
+         toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+   });
+
+
+   // Banco de dados 
+   async function handleRegister(e) {
+      e.preventDefault();
+ 
+      if (name === "" || username === "" || token === "") {
+         handleOpenErrorModal();
+         setTitleError("Preencha todos os campos");
+         setErrorMessage(
+            "Você precisa preencher todos os campos antes de continuar."
+         );
+         return;
+      }
+ 
+      try {
+         const response = await api.post('/api/users/register', { name, username, password: token });
+            if (response.status === 201) {
+               Toast.fire({
+                  icon: 'sucess',
+                  title: "Cadastro efetuado com sucesso!"
+               });
+               setIsRegistering(false);
+            }
+
+      } catch (error) {
+         handleOpenErrorModal();
+         setTitleError("Erro ao registrar");
+         setErrorMessage(error.response.data);
+      }
+   }
+ 
+ 
+   async function handleLogin(e) {
+      e.preventDefault();
+    
+      if (username === "" || token === "") {
+         handleOpenErrorModal();
+         setTitleError("Preencha todos os campos");
+         setErrorMessage(
+          "Você precisa preencher todos os campos antes de continuar."
+        );
+        return;
+      }
+    
+      try {
+         const response = await api.post('/api/users/login', { username, password: token });
+         if (response.status === 200) {
+           setSession(username);
+           setQrCode("");
+     
+           if (!localStorage.getItem("firstAccessDone")) {
+             localStorage.setItem("firstAccessDone", "true");
+             // Mostrar QRCode (novamente, você não precisa fazer nada extra aqui)
+           } else {
+             history.push("/chat");
+           }
+        }
+      } catch (error) {
+        handleOpenErrorModal();
+        setTitleError("Erro ao fazer login");
+        setErrorMessage(error.response.data);
+      }
+    }
+    
 
   useEffect(() => {
     socket.on("qrCode", (qrCode) => {
@@ -171,210 +253,202 @@ export default function LoginPage({ history }) {
   };
 
   return (
-    <div>
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classes.modal}
-        open={open}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={open}>
-          <Layout className={classes.paper}>
+      <div>
+         <Modal
+            aria-labelledby="transition-modal-title"
+            aria-describedby="transition-modal-description"
+            className={classes.modal}
+            open={open}
+            closeAfterTransition
+            BackdropComponent={Backdrop}
+            BackdropProps={{
+               timeout: 500,
+            }}
+         >
+
+         <Fade in={open}>
+            <Layout className={classes.paper}>
+               <ModalMenu handleClose={handleCloseModal} open={openMenuModal} />
             
-            
-            <ModalMenu handleClose={handleCloseModal} open={openMenuModal} />
-            
-            <ErrorModal
-              handleClose={handleCloseErrorModal}
-              open={openErrorModal}
-              errorMessage={errorMessage}
-              titleError={titleError}
-            />
-            <BackdropComponent open={openBackdrop} />
+               <ErrorModal
+                  handleClose={handleCloseErrorModal}
+                  open={openErrorModal}
+                  errorMessage={errorMessage}
+                  titleError={titleError}
+               />
+               <BackdropComponent open={openBackdrop} />
 
-            {haveLogin !== undefined ? (
-              <div className={"close-item"} onClick={() => history.goBack()}>
-                <X />
-              </div>
-            ) : null}
+               {haveLogin !== undefined ? (
+                  <div className={"close-item"} onClick={() => history.goBack()}>
+                     <X />
+                  </div>
 
-            <Container>
-              <div className={"container-session"}>
-                <div id={"left-div"}>
-                  <h1> NextGo Zap </h1>
-                  <p> A sua plataforma de chat online </p>
-                  <img src={LoginImage} alt={"Login Team"} />
-                </div>
+               ) : null}
 
-                <div id={"right-div"}>
-                  {qrCode === "" ? null : (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Title>
-                        <p>Escaneie o QRCode</p>
-                        <p>para iniciar a sessão</p>
-                      </Title>
+                  <Container>
+                     <div className={"container-session"}>
+                        <div id={"left-div"}>
+                           <h1> NextGo Zap </h1>
+                           <p> A sua plataforma de chat online </p>
+                           <img src={LoginImage} alt={"Login Team"} />
+                        </div>
 
-                      <ImageCustom
-                        ref={animationRef}
-                        className={"animation noselect"}
-                        autoplay
-                        src={qrCode}
-                        alt={"Smartphone"}
-                        draggable={"false"}
-                      />
-                    </div>
-                  )}
+                        <div id={"right-div"}>
+                           {qrCode === "" ? null : (
+                              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                                 <Title>
+                                    <p>Escaneie o QRCode</p>
+                                    <p>para iniciar a sessão</p>
+                                 </Title>
 
-                  {qrCode !== "" ? null : (
-                    <Formulario
-                      onSubmit={(e) =>
-                        isRegistering ? handleRegister(e) : submitSession(e)
-                      }
-                    >
-                      <Title id={"title"}>
-                        {isRegistering ? "Criar conta" : "Iniciar sessão"}
-                      </Title>
+                                 <ImageCustom
+                                    ref={animationRef}
+                                    className={"animation noselect"}
+                                    autoplay
+                                    src={qrCode}
+                                    alt={"Smartphone"}
+                                    draggable={"false"}
+                                 />
+                              </div>
+                           )}
 
-                      {isRegistering ? (
-                        <>
-                          <div className={"top-info"}>
-                            <small>Nome</small>
-                          </div>
+                           {qrCode !== "" ? null : (
+                              <Formulario onSubmit={(e) => isRegistering ? handleRegister(e) : submitSession(e)}>
+                                 <Title id={"title"}>
+                                    {isRegistering ? "Criar conta" : "Iniciar sessão"}
+                                 </Title>
 
-                          <input autoComplete="off" placeholder="Nome" />
+                                    {isRegistering ? (
+                                    <>
+                                       <div className={"top-info"}>
+                                          <small>Nome</small>
+                                       </div>
+                                       <input autoComplete="off" placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} />
 
-                          <div className={"top-info"}>
-                            <small>Nome de usuário</small>
-                          </div>
+                                       <div className={"top-info"}>
+                                          <small>Nome de usuário</small>
+                                       </div>
 
-                          <input
-                            style={{
-                              borderColor:
-                                usernameValid === null
-                                  ? "#737373"
-                                  : usernameValid
-                                  ? "green"
-                                  : "red",
-                              color:
-                                usernameValid === null
-                                  ? "black"
-                                  : usernameValid
-                                  ? "green"
-                                  : "red",
-                            }}
-                            autoComplete="off"
-                            placeholder={
-                              usernameValid === false
-                                ? "Não é permitido o uso de caracteres especiais"
-                                : "Nome do usuário"
-                            }
-                            value={username}
-                            onChange={handleUsernameChange}
-                          />
-                          {usernameValid === true && (
-                            <span
-                              style={{
-                                color: "green",
-                                marginLeft: "47px",
-                                fontSize: "12px",
-                              }}
-                            >
-                              Nome de usuário disponível
-                            </span>
-                          )}
-                          {usernameValid === false && (
-                            <span
-                              style={{
-                                color: "red",
-                                marginLeft: "47px",
-                                fontSize: "12px",
-                              }}
-                            >
-                              Não é permitido o uso de caracteres especiais
-                            </span>
-                          )}
+                                       <input
+                                          style={{
+                                             borderColor:
+                                             usernameValid === null
+                                                ? "#737373"
+                                                : usernameValid
+                                                ? "green"
+                                                : "red",
+                                             color:
+                                             usernameValid === null
+                                                ? "black"
+                                                : usernameValid
+                                                ? "green"
+                                                : "red",
+                                          }}
 
-                          <div className={"top-info"}>
-                            <small>Senha</small>
-                          </div>
+                                          autoComplete="off"
+                                          placeholder={
+                                             usernameValid === false
+                                             ? "Não é permitido o uso de caracteres especiais"
+                                             : "Nome do usuário"
+                                          }
+                                          value={username}
+                                          onChange={handleUsernameChange}
+                                       />
+                                       
+                                       {usernameValid === true && (
+                                          <span
+                                             style={{
+                                             color: "green",
+                                             marginLeft: "47px",
+                                             fontSize: "12px",
+                                             }}
+                                          >
+                                             Nome de usuário disponível
+                                          </span>
+                                       )}
 
-                          <input autoComplete="off" placeholder="Senha" />
+                                       {usernameValid === false && (
+                                          <span
+                                             style={{
+                                             color: "red",
+                                             marginLeft: "47px",
+                                             fontSize: "12px",
+                                             }}
+                                          >
+                                             Não é permitido o uso de caracteres especiais
+                                          </span>
+                                       )}
 
-                          <button type="submit" id="send-btn">
-                            {" "}
-                            Criar conta{" "}
-                          </button>
+                                       <div className={"top-info"}>
+                                          <small>Senha</small>
+                                       </div>
 
-                          <button onClick={toggleForm} id="new-account">
-                            {" "}
-                            Iniciar sessão{" "}
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <div className={"top-info"}>
-                            <small>Usuário</small>
-                          </div>
+                                       <input autoComplete="off" placeholder="Senha" />
 
-                          <input
-                            id={"session"}
-                            autoComplete="off"
-                            placeholder="Nome do usuário"
-                            value={session}
-                            onChange={(e) => setSession(e.target.value)}
-                          />
+                                       <button type="submit" id="send-btn" onClick={handleRegister}>
+                                          Criar conta
+                                       </button>
 
-                          <div className={"top-info"}>
-                            <small>Senha</small>
-                          </div>
+                                       <button onClick={toggleForm} id="new-account">
+                                          {" "}
+                                          Iniciar sessão{" "}
+                                       </button>
+                                    </>
+                                 
+                                    ) : (
+                                    
+                                    <>
+                                       <div className={"top-info"}>
+                                          <small>Usuário</small>
+                                       </div>
 
-                          <input
-                            id={"token"}
-                            autoComplete="off"
-                            placeholder="Senha"
-                            value={token}
-                            onChange={(e) => setToken(e.target.value)}
-                          />
+                                       <input
+                                          id={"session"}
+                                          autoComplete="off"
+                                          placeholder="Nome do usuário"
+                                          value={session}
+                                          onChange={(e) => setSession(e.target.value)}
+                                       />
 
-                          <div className={"esqueceu-senha"}>
-                            <span id="pass" onClick={() => handleOpenModal()}>
-                              Esqueceu sua senha?
-                            </span>
-                          </div>
+                                       <div className={"top-info"}>
+                                          <small>Senha</small>
+                                       </div>
 
-                          <button type="submit" id="send-btn">
-                            Entrar
-                          </button>
+                                       <input
+                                          id={"token"}
+                                          autoComplete="off"
+                                          placeholder="Senha"
+                                          value={token}
+                                          onChange={(e) => setToken(e.target.value)}
+                                       />
 
-                          <button
-                            type="button"
-                            id="new-account"
-                            onClick={toggleForm}
-                          >
-                            Criar conta
-                          </button>
-                        </>
-                      )}
-                    </Formulario>
-                  )}
-                </div>
-              </div>
-            </Container>
-          </Layout>
-        </Fade>
-      </Modal>
-    </div>
-  );
+                                       <div className={"esqueceu-senha"}>
+                                          <span id="pass" onClick={() => handleOpenModal()}>
+                                             Esqueceu sua senha?
+                                          </span>
+                                       </div>
+
+                                       <button type="submit" id="send-btn">
+                                          Entrar
+                                       </button>
+
+                                       <button
+                                          type="button"
+                                          id="new-account"
+                                          onClick={toggleForm}
+                                       >
+                                          Criar conta
+                                       </button>
+                                    </>
+                                    )}
+                              </Formulario>
+                           )}
+                        </div>
+                     </div>
+                  </Container>
+            </Layout>
+         </Fade>
+         </Modal>
+      </div>
+   );
 }

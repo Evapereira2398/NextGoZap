@@ -1,5 +1,5 @@
 export default {
-  secretKey: 'THISISMYSECURETOKEN',
+  secretKey: 'NextGoZapServer',
   host: 'http://localhost',
   port: '21465',
   deviceName: 'NextGoZap',

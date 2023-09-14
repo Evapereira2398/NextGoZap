@@ -1,4 +1,5 @@
 import { defaultLogger } from '@wppconnect-team/wppconnect';
+import userRoutes from './routes/userRoutes';
 import cors from 'cors';
 import express, { NextFunction } from 'express';
 import boolParser from 'express-query-boolean';
@@ -16,6 +17,7 @@ import {
   startAllSessions,
 } from './util/functions';
 import { createLogger } from './util/logger';
+
 
 //require('dotenv').config();
 
@@ -74,6 +76,8 @@ export function initServer(serverOptions: any) {
   });
 
   app.use(routes);
+  app.use('/api/users', userRoutes);
+
 
   createFolders();
   const http = createServer(app);
