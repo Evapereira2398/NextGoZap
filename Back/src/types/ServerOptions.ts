@@ -7,7 +7,7 @@
     deviceName: string;
     poweredBy: string;
     startAllSession: boolean;
-    tokenStoreType: string;
+    tokenStoreType: 'file' | 'postgresql';
     maxListeners: number;
     customUserDataDir: string;
     webhook: {
@@ -54,7 +54,13 @@
       redisPassword: string;
       redisDb: string;
       redisPrefix: string;
+      pgDatabase: string,
+      pgUser: string,
+      pgPassword: string,
+      pgHost: string,
+      pgPort: number,
     };
+
     aws_s3: {
       region: BucketLocationConstraint | null;
       access_key_id: string | null;

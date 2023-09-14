@@ -75,8 +75,8 @@ export default {
   db: {
     mongodbDatabase: 'tokens',
     mongodbCollection: '',
-    mongodbUser: '',
-    mongodbPassword: '',
+    mongodbUser: 'evanderson',
+    mongodbPassword: '142499',
     mongodbHost: '',
     mongoIsRemote: true,
     mongoURLRemote: '',
@@ -86,6 +86,11 @@ export default {
     redisPassword: '',
     redisDb: 0,
     redisPrefix: 'docker',
+    pgDatabase: 'NextGoZap',
+    pgUser: 'postgres',
+    pgPassword: process.env.PG_PASSWORD || 'defaultPassword',
+    pgHost: 'localhost',
+    pgPort: 5432,
   },
 
   aws_s3: {
