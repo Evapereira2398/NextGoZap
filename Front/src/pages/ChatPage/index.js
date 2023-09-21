@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import api from "../../services/api";
 import { getSession, getToken } from "../../services/auth";
 import { listenerMessages } from "../../services/socket-listener";
@@ -61,82 +55,82 @@ import {
 const defaultImage = "user.png";
 
 const SendMessagePage = () => {
-  const dropRef = useRef(null);
-  const [allMessages, setAllMessages] = useState([]);
-  const [chats, setChats] = useState([]);
-  const [dados, setDados] = useState([]);
-  const [choosedContact, setChoosedContact] = useState(null);
-  const [imgContact, setImgContact] = useState("");
-  const [message, setMessage] = useState("");
-  const chatRef = useRef(null);
-  const messagesEnd = useRef(null);
-  const [recordState, setRecordState] = useState(null);
-  const [segundos, setSegundos] = useState(0);
-  const [minutos, setMinutos] = useState(0);
-  const [stop, setStop] = useState(true);
-  const [isBlocked, setIsBlocked] = useState(false);
-  const recorder = useMemo(() => new MicRecorder({ bitRate: 128 }), []);
-  const [openLoading, setOpenLoading] = useState(false);
-  const [contacts, setContacts] = useState([]);
-  const [emoji, setEmoji] = useState(false);
-  const [hasMessages, setHasMessages] = useState(false);
-  const [selectedMessage, setSelectedMessage] = useState(null);
-  const [selectedChatImage, setSelectedChatImage] = React.useState(defaultImage);
-  const [loading, setLoading] = useState(true);
-  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
-  const [hasNoMore, setHasNoMore] = useState(false);
-  const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [selectedContactName, setSelectedContactName] = useState("");
+   const dropRef = useRef(null);
+   const [allMessages, setAllMessages] = useState([]);
+   const [chats, setChats] = useState([]);
+   const [dados, setDados] = useState([]);
+   const [choosedContact, setChoosedContact] = useState(null);
+   const [imgContact, setImgContact] = useState("");
+   const [message, setMessage] = useState("");
+   const chatRef = useRef(null);
+   const messagesEnd = useRef(null);
+   const [recordState, setRecordState] = useState(null);
+   const [segundos, setSegundos] = useState(0);
+   const [minutos, setMinutos] = useState(0);
+   const [stop, setStop] = useState(true);
+   const [isBlocked, setIsBlocked] = useState(false);
+   const recorder = useMemo(() => new MicRecorder({ bitRate: 128 }), []);
+   const [openLoading, setOpenLoading] = useState(false);
+   const [contacts, setContacts] = useState([]);
+   const [emoji, setEmoji] = useState(false);
+   const [hasMessages, setHasMessages] = useState(false);
+   const [selectedMessage, setSelectedMessage] = useState(null);
+   const [selectedChatImage, setSelectedChatImage] = React.useState(defaultImage);
+   const [loading, setLoading] = useState(true);
+   const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
+   const [hasNoMore, setHasNoMore] = useState(false);
+   const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
+   const [isLoaded, setIsLoaded] = useState(false);
+   const [selectedContactName, setSelectedContactName] = useState("");
 
 
-  // Definição do Alert para verificações adicionais
-  const Toast = Swal.mixin({
-    toast: true,
-    position: "top-end",
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.addEventListener("mouseenter", Swal.stopTimer);
-      toast.addEventListener("mouseleave", Swal.resumeTimer);
-    },
-  });
+   // Definição do Alert para verificações adicionais
+   const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+         toast.addEventListener("mouseenter", Swal.stopTimer);
+         toast.addEventListener("mouseleave", Swal.resumeTimer);
+      },
+   });
 
-  useEffect(() => {
-    if (allMessages.length > 0 && !hasMessages) {
-      setHasMessages(true);
-    }
-  }, [allMessages]);
+   useEffect(() => {
+      if (allMessages.length > 0 && !hasMessages) {
+         setHasMessages(true);
+      }
+   }, [allMessages]);
 
-  // Verificar sessão
-  useEffect(() => {
-    async function checkConnection() {
-      try {
-        await api.get(`${getSession()}/check-connection-session`, config());
-        await getAllChats();
-        await getAllContacts();
-      } catch (e) {}
-    }
+   // Verificar sessão
+   useEffect(() => {
+      async function checkConnection() {
+         try {
+            await api.get(`${getSession()}/check-connection-session`, config());
+            await getAllChats();
+            await getAllContacts();
+         } catch (e) {}
+      }
 
-    checkConnection();
+      checkConnection();
 
-    return () => {
-      setChats([]);
-    };
-  }, []);
+      return () => {
+         setChats([]);
+      };
+   }, []);
 
-  useEffect(() => {
-    if (stop === false) {
-      const intervalId = setInterval(() => {
-        setSegundos((seconds) => {
-          if (seconds >= 59) {
-            zerar();
-            incrementarMinuto();
-          }
+   useEffect(() => {
+      if (stop === false) {
+         const intervalId = setInterval(() => {
+            setSegundos((seconds) => {
+               if (seconds >= 59) {
+               zerar();
+               incrementarMinuto();
+            }
 
-          return seconds + 1;
-        });
+            return seconds + 1;
+         });
       }, 1000);
 
       return () => {
@@ -148,12 +142,12 @@ const SendMessagePage = () => {
   
   // ------------------------------ Retorno das mensagens via Socket ---------------------------------- //
   listenerMessages((err, data) => {
-    if (err) return;
+      if (err) return;
 
-    /*if (!data.response.fromMe) {
-            const audio = new Audio(NotificationSound);
-            audio.play();
-        }*/
+      /*if (!data.response.fromMe) {
+               const audio = new Audio(NotificationSound);
+               audio.play();
+         }*/
 
     (async function () {
       const {
@@ -262,89 +256,6 @@ const SendMessagePage = () => {
     }
 
     setLoading(false);
-  }
-
-  // ------------------------------------------------------- //
-  function zerarCronometro() {
-    setSegundos(0);
-    setMinutos(0);
-  }
-
-  const startRecording = () => {
-    navigator.getUserMedia(
-      { audio: true },
-      () => {
-        setIsBlocked(false);
-      },
-      () => {
-        alert("Permission Denied");
-        setIsBlocked(true);
-      }
-    );
-
-    if (isBlocked) {
-      alert("Permission Denied");
-    } else {
-      recorder
-        .start()
-        .then(() => {
-          setRecordState(true);
-          setStop(false);
-        })
-        .catch((e) => {
-          console.error(e);
-        });
-    }
-  };
-
-  function cancelRecording() {
-    // mediaRecorder.stop();
-    setRecordState(null);
-    setStop(true);
-    zerarCronometro();
-  }
-
-  const finishRecording = () => {
-    setRecordState(null);
-    setStop(true);
-    zerarCronometro();
-
-    recorder
-      .stop()
-      .getMp3()
-      .then(([buffer, blob]) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = async function () {
-          const base64data = reader.result;
-          await api.post(
-            `${getSession()}/send-voice`,
-            {
-              url: base64data,
-              phone: choosedContact.id,
-            },
-            config()
-          );
-        };
-
-        const file = new File(buffer, "audio.mp3", {
-          type: blob.type,
-          lastModified: Date.now(),
-        });
-        new Audio(URL.createObjectURL(file));
-      })
-      .catch((e) => {
-        alert("We could not retrieve your message");
-        console.log(e);
-      });
-  };
-
-  function incrementarMinuto() {
-    setMinutos((prevState) => prevState + 1);
-  }
-
-  function zerar() {
-    setSegundos(0);
   }
 
   //-------- ------------------------ Retorno dos chats ---------------------------------- //
@@ -647,6 +558,89 @@ const SendMessagePage = () => {
         );
     });
   };
+
+
+   // ------------------------------------------------------- //
+   function zerarCronometro() {
+      setSegundos(0);
+      setMinutos(0);
+   }
+  
+   const startRecording = () => {
+   navigator.getUserMedia(
+      { audio: true },
+      () => {
+         setIsBlocked(false);
+      },
+      
+      () => {
+         alert("Permission Denied");
+         setIsBlocked(true);
+      }
+   );
+  
+   if (isBlocked) {
+      alert("Permission Denied");
+
+   } else {
+      recorder
+         .start()
+         .then(() => {
+            setRecordState(true);
+            setStop(false);
+         })
+         
+         .catch((e) => {
+            console.error(e);
+         });
+      }
+   };
+  
+   function cancelRecording() {
+      // mediaRecorder.stop();
+      setRecordState(null);
+      setStop(true);
+      zerarCronometro();
+   }
+  
+   const finishRecording = () => {
+      setRecordState(null);
+      setStop(true);
+      zerarCronometro();
+  
+   recorder
+      .stop()
+      .getMp3()
+      .then(([buffer, blob]) => {
+         const reader = new FileReader();
+         reader.readAsDataURL(blob);
+         reader.onloadend = async function () {
+            const base64data = reader.result;
+            await api.post(`${getSession()}/send-voice`, { url: base64data, phone: choosedContact.id }, config());   
+         };
+  
+         const file = new File(buffer, "audio.mp3", {
+            type: blob.type,
+            lastModified: Date.now(),
+         });
+
+         new Audio(URL.createObjectURL(file));
+
+      })
+        
+         .catch((e) => {
+            alert("We could not retrieve your message");
+            console.log(e);
+         });
+   };
+  
+   function incrementarMinuto() {
+      setMinutos((prevState) => prevState + 1);
+   }
+  
+   function zerar() {
+      setSegundos(0);
+   }
 
   // ----------------------------------- SubMenus ------------------------------------ //
 
